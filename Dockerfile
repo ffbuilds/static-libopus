@@ -7,9 +7,10 @@ ARG OPUS_VERSION=1.3.1
 ARG OPUS_URL="https://archive.mozilla.org/pub/opus/opus-$OPUS_VERSION.tar.gz"
 ARG OPUS_SHA256=65b58e1e25b2a114157014736a3d9dfeaad8d41be1c8179866f144a2fb44ff9d
 
-# bump: alpine /FROM alpine:([\d.]+)/ docker:alpine|^3
-# bump: alpine link "Release notes" https://alpinelinux.org/posts/Alpine-$LATEST-released.html
-FROM alpine:3.16.2 AS base
+# Must be specified
+ARG ALPINE_VERSION
+
+FROM alpine:${ALPINE_VERSION} AS base
 
 FROM base AS download
 ARG OPUS_URL
@@ -31,9 +32,14 @@ COPY --from=download /tmp/opus/ /tmp/opus/
 WORKDIR /tmp/opus
 RUN \
   apk add --no-cache --virtual build \
-    build-base && \
+    build-base pkgconf && \
   ./configure --disable-shared --enable-static --disable-extra-programs --disable-doc && \
   make -j$(nproc) install && \
+  # Sanity tests
+  pkg-config --exists --modversion --path opus && \
+  ar -t /usr/local/lib/libopus.a && \
+  readelf -h /usr/local/lib/libopus.a && \
+  # Cleanup
   apk del build
 
 FROM scratch
