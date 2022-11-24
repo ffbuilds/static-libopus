@@ -1,3 +1,4 @@
+# syntax=docker/dockerfile:1
 
 # bump: opus /OPUS_VERSION=([\d.]+)/ https://github.com/xiph/opus.git|^1
 # bump: opus after ./hashupdate Dockerfile OPUS $LATEST
